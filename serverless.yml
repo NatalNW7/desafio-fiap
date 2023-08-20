@@ -1,0 +1,36 @@
+service: exercicio-sqs-s3
+
+frameworkVersion: '3'
+
+custom:
+  sqsARN: arn:aws:sqs:us-east-1:182592568953:teste_exercicio1
+  sqsURL: https://queue.amazonaws.com/182592568953/teste_exercicio1
+  nomeBucket: tudojunto2-341463
+  
+provider:
+  name: aws
+  runtime: python3.9
+  region: 'us-east-1'
+  memorySize: 128
+  iam:
+    role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+  environment:
+    SQSURL: ${self:custom.sqsURL}
+    NOMEBUCKET: ${self:custom.nomeBucket}
+
+
+functions:
+  s3-trigger:
+    handler: s3.handler
+    events:
+      - s3:
+          bucket: ${self:custom.nomeBucket}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .json
+  sqs-trigger:
+    handler: sqs.handler
+    events:
+      - sqs:
+          arn: ${self:custom.sqsARN}
+          batchSize: 1
